@@ -1,0 +1,337 @@
+"use strict";
+
+// 1. Все фотографии загружаются локально из папки assets/.
+// Здесь больше нет внешних URL и нет замены image.src по сети.
+
+// 2. Мобильное меню.
+const menuButton = document.querySelector(".menu-toggle");
+const navigation = document.querySelector(".primary-nav");
+menuButton.addEventListener("click", () => {
+  const isOpen = navigation.classList.toggle("is-open");
+  menuButton.setAttribute("aria-expanded", String(isOpen));
+  menuButton.setAttribute("aria-label", isOpen ? "Закрыть меню" : "Открыть меню");
+});
+navigation.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", () => {
+    navigation.classList.remove("is-open");
+    menuButton.setAttribute("aria-expanded", "false");
+  });
+});
+
+// 3. Фильтр использует data-filter у кнопки и список слов из data-category у карточки.
+// Например, модель 'electric suv' попадает одновременно в оба фильтра.
+const filterButtons = document.querySelectorAll(".filter-button");
+const cards = document.querySelectorAll(".model-card");
+const status = document.querySelector("#filter-status");
+filterButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const selected = button.dataset.filter;
+    filterButtons.forEach((item) => {
+      const active = item === button;
+      item.classList.toggle("is-active", active);
+      item.setAttribute("aria-pressed", String(active));
+    });
+    let visibleCount = 0;
+    cards.forEach((card) => {
+      const categories = card.dataset.category.split(" ");
+      const visible = selected === "all" || categories.includes(selected);
+      card.hidden = !visible;
+      if (visible) visibleCount += 1;
+    });
+    status.textContent = `Показано моделей: ${visibleCount}`;
+  });
+});
+
+// 4. Данные моделей: свойства, описание, история и ссылка на официальный источник.
+const modelData = {
+  "turbo-s": {
+    "title": "911 Turbo S",
+    "description": "Флагман 911 с системой T-Hybrid, электрическими турбонагнетателями и ярко выраженной спортивной динамикой.",
+    "history": [
+      [
+        "1963",
+        "Первый 911 появился на автосалоне во Франкфурте под именем 901."
+      ],
+      [
+        "1974",
+        "Porsche представила первый серийный 911 Turbo."
+      ],
+      [
+        "2025",
+        "Дебютировал новый Turbo S поколения 992.2 с технологией T-Hybrid."
+      ]
+    ],
+    "stats": [
+      [
+        "711 л.с.",
+        "Мощность, метрические л.с."
+      ],
+      [
+        "2,5 с",
+        "Разгон 0–100 км/ч"
+      ],
+      [
+        "T-Hybrid",
+        "Тип привода"
+      ]
+    ],
+    "source": "https://newsroom.porsche.com/en/2025/products/porsche-911-turbo-s-top-of-the-range-model-twin-turbo-performance-hybrid-40446.html"
+  },
+  "carrera-gts": {
+    "title": "911 Carrera GTS",
+    "description": "Carrera GTS объединяет пригодность для повседневной езды с дополнительной динамикой и облегчённой гибридной системой.",
+    "history": [
+      [
+        "1963",
+        "Впервые представлен Porsche 911 — основа всего семейства."
+      ],
+      [
+        "2024",
+        "911 Carrera GTS стал первым дорожным 911 с системой T-Hybrid."
+      ]
+    ],
+    "stats": [
+      [
+        "3,0 с",
+        "Разгон 0–100 км/ч"
+      ],
+      [
+        "T-Hybrid",
+        "Силовая установка"
+      ],
+      [
+        "911",
+        "Семейство"
+      ]
+    ],
+    "source": "https://newsroom.porsche.com/en/2024/products/porsche-new-911-world-premiere-hybrid-36322.html"
+  },
+  "gt3-rs": {
+    "title": "911 GT3 RS",
+    "description": "Дорожный спорткар, ориентированный на гоночную трассу: активная аэродинамика, минимизация массы и атмосферный двигатель.",
+    "history": [
+      [
+        "1972",
+        "Появился знаменитый 911 Carrera RS 2.7 — один из истоков философии RS."
+      ],
+      [
+        "2003",
+        "Клиенты получили первый 911 GT3 RS."
+      ],
+      [
+        "2022",
+        "Porsche представила современный GT3 RS поколения 992."
+      ]
+    ],
+    "stats": [
+      [
+        "RS",
+        "Гоночное наследие"
+      ],
+      [
+        "992",
+        "Поколение"
+      ],
+      [
+        "2022",
+        "Презентация версии"
+      ]
+    ],
+    "source": "https://newsroom.porsche.com/en/2022/products/porsche-911-gt3-rs-world-premiere-29177.html"
+  },
+  "taycan-turbo-gt": {
+    "title": "Taycan Turbo GT",
+    "description": "Самая радикальная версия семейства Taycan своего времени: высокая мощность, облегчение конструкции и настройки для трассы.",
+    "history": [
+      [
+        "2019",
+        "Porsche представила Taycan — первый серийный полностью электрический спорткар бренда."
+      ],
+      [
+        "2024",
+        "Состоялась мировая премьера Taycan Turbo GT."
+      ]
+    ],
+    "stats": [
+      [
+        "Электро",
+        "Тип силовой установки"
+      ],
+      [
+        "2024",
+        "Год премьеры"
+      ],
+      [
+        "Taycan",
+        "Модельная серия"
+      ]
+    ],
+    "source": "https://newsroom.porsche.com/en/2024/products/porsche-new-taycan-unveiled-on-three-continents-35507.html"
+  },
+  "taycan-4s": {
+    "title": "Taycan 4S",
+    "description": "Один из вариантов Taycan для повседневных поездок и дальних маршрутов, с узнаваемой спортивной посадкой и электрическим приводом.",
+    "history": [
+      [
+        "2019",
+        "Семейство Taycan дебютировало с версиями Turbo и Turbo S."
+      ],
+      [
+        "2019",
+        "Позднее Porsche добавила в гамму более доступный Taycan 4S."
+      ],
+      [
+        "2024",
+        "Линейка Taycan получила масштабное техническое обновление."
+      ]
+    ],
+    "stats": [
+      [
+        "Электро",
+        "Силовая установка"
+      ],
+      [
+        "2019",
+        "Дебют Taycan 4S"
+      ],
+      [
+        "4S",
+        "Версия"
+      ]
+    ],
+    "source": "https://newsroom.porsche.com/en_US/products/porsche-adds-the-taycan-4s-to-the-electric-family-19155.html"
+  },
+  "macan-4": {
+    "title": "Macan 4 Electric",
+    "description": "Второе поколение компактного SUV Macan построено вокруг электрической архитектуры и сочетает динамику с практичностью.",
+    "history": [
+      [
+        "2014",
+        "Начались продажи первого поколения Porsche Macan."
+      ],
+      [
+        "2024",
+        "Представлено второе, полностью электрическое поколение Macan, включая Macan 4."
+      ]
+    ],
+    "stats": [
+      [
+        "Электро",
+        "Силовая установка"
+      ],
+      [
+        "2024",
+        "Электрическое поколение"
+      ],
+      [
+        "SUV",
+        "Класс кузова"
+      ]
+    ],
+    "source": "https://newsroom.porsche.com/en_PME/2024/products/porsche-the-all-electric-macan-35086.html"
+  },
+  "cayenne-s": {
+    "title": "Cayenne S Electric",
+    "description": "Электрический Cayenne S развивает семейство большого SUV Porsche: полный привод и высокая мощность в практичном кузове.",
+    "history": [
+      [
+        "2002",
+        "Появился первый Cayenne — выход Porsche на рынок больших SUV."
+      ],
+      [
+        "2026",
+        "Линейка Cayenne Electric пополнилась версией Cayenne S Electric."
+      ]
+    ],
+    "stats": [
+      [
+        "666 л.с.*",
+        "С Launch Control"
+      ],
+      [
+        "3,8 с",
+        "Разгон 0–100 км/ч"
+      ],
+      [
+        "Электро",
+        "Силовая установка"
+      ]
+    ],
+    "source": "https://newsroom.porsche.com/en/2026/products/porsche-the-new-cayenne-s-electric-41864.html"
+  },
+  "panamera": {
+    "title": "Panamera Turbo E-Hybrid",
+    "description": "Спортивный представительский автомобиль с подключаемой гибридной системой и акцентом на комфорт дальних поездок.",
+    "history": [
+      [
+        "2009",
+        "Porsche представила Panamera — новую модельную линию спортивных четырёхдверных автомобилей."
+      ],
+      [
+        "2023",
+        "Дебютировало третье поколение Panamera, включая Turbo E-Hybrid."
+      ]
+    ],
+    "stats": [
+      [
+        "E-Hybrid",
+        "Подключаемый гибрид"
+      ],
+      [
+        "2023",
+        "Третье поколение"
+      ],
+      [
+        "4 двери",
+        "Кузов"
+      ]
+    ],
+    "source": "https://newsroom.porsche.com/en_AE/2023/products/porsche-panamera-world-premiere-shanghai-34450.html"
+  }
+};
+
+// 5. Диалог: заполняем элементами DOM, а не HTML-строками.
+const dialog = document.querySelector("#model-dialog");
+const dialogTitle = document.querySelector("#dialog-title");
+const dialogDescription = document.querySelector("#dialog-description");
+const dialogHistory = document.querySelector("#dialog-history");
+const dialogStats = document.querySelector("#dialog-stats");
+const dialogSource = document.querySelector("#dialog-source");
+let lastTrigger = null;
+
+document.querySelectorAll("[data-model]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const model = modelData[button.dataset.model];
+    if (!model) return;
+    lastTrigger = button;
+    dialogTitle.textContent = model.title;
+    dialogDescription.textContent = model.description;
+    dialogSource.href = model.source;
+    dialogHistory.replaceChildren();
+    model.history.forEach(([year, explanation]) => {
+      const item = document.createElement("li");
+      const date = document.createElement("strong");
+      const info = document.createElement("span");
+      date.textContent = year;
+      info.textContent = explanation;
+      item.append(date, info);
+      dialogHistory.append(item);
+    });
+    dialogStats.replaceChildren();
+    model.stats.forEach(([value, name]) => {
+      const block = document.createElement("div");
+      const strong = document.createElement("strong");
+      const span = document.createElement("span");
+      strong.textContent = value;
+      span.textContent = name;
+      block.append(strong, span);
+      dialogStats.append(block);
+    });
+    dialog.showModal();
+  });
+});
+document.querySelector(".dialog-close").addEventListener("click", () => dialog.close());
+dialog.addEventListener("click", (event) => {
+  if (event.target === dialog) dialog.close();
+});
+dialog.addEventListener("close", () => lastTrigger?.focus());
